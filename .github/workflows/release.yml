@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pure Node skill — no compilation. Package the skill files into one
+      # cross-platform zip that can be dropped into an agent's skills dir.
+      - name: Package skill zip
+        run: |
+          mkdir -p skill-package/remote-server
+          cp -r cli skill-package/remote-server/
+          cp SKILL.md README.md LICENSE targets.example.json skill-package/remote-server/
+          cd skill-package
+          zip -r ../remote-server-skill.zip remote-server
+          cd ..
+          echo "[CI] Package contents:"
+          unzip -l remote-server-skill.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: Remote Server Skill ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Remote Server Skill ${{ steps.get_version.outputs.VERSION }}
+
+            SSH-based remote toolkit CLI — Claude Code-style primitive tools (`bash`/`read`/`write`/`edit`/`ls`/`grep`/`glob`/`download`/`upload`) executed over SSH.
+
+            ### Install (as an Agent Skill)
+
+            Download `remote-server-skill.zip`, unzip into your agent's skills directory:
+
+            ```bash
+            unzip remote-server-skill.zip -d ~/.claude/skills/
+            # then configure your servers:
+            cd ~/.claude/skills/remote-server
+            cp targets.example.json targets.json   # edit with your servers
+            ```
+
+            ### Use (standalone CLI)
+
+            ```bash
+            node cli/remote-server.mjs --target myserver bash "docker ps"
+            node cli/remote-server.mjs --target myserver read /etc/hosts --offset 1 --limit 20
+            ```
+
+            Requires Node.js >= 18 and `ssh`/`scp` in PATH. No third-party dependencies.
+
+            See the [README](https://github.com/kengerlwl/remote-server-skill#readme) for full docs.
+          files: |
+            remote-server-skill.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

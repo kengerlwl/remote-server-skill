@@ -1,0 +1,28 @@
+{
+  "default": "example",
+  "targets": {
+    "example": {
+      "description": "示例：通过 host + user 直连的 Linux 服务器",
+      "host": "your-server.example.com",
+      "user": "root",
+      "shell": "bash"
+    },
+    "with-port": {
+      "description": "示例：自定义 SSH 端口（如经内网穿透）",
+      "host": "your-server.example.com",
+      "user": "ubuntu",
+      "port": 2222,
+      "shell": "bash"
+    },
+    "via-ssh-alias": {
+      "description": "示例：复用 ~/.ssh/config 里已配置的别名",
+      "alias": "my-ssh-host",
+      "shell": "bash"
+    },
+    "windows-box": {
+      "description": "示例：Windows 主机，远程 shell 为 PowerShell",
+      "alias": "my-windows-host",
+      "shell": "powershell"
+    }
+  }
+}

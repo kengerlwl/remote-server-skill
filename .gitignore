@@ -1,0 +1,13 @@
+# 用户本地真实服务器配置（含私密连接信息，不入库）
+targets.json
+
+# 依赖与构建产物
+node_modules/
+dist/
+*.zip
+
+# 系统/编辑器
+.DS_Store
+*.log
+.idea/
+.vscode/
