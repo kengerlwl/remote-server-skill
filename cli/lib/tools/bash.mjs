@@ -98,8 +98,10 @@ echo "${runId}"
   const prefix = truncated ? '[输出过长，已保留尾部内容]\n' : '';
   const body = (prefix + text).trim();
 
+  // 透传远程命令退出码，使调用方用 $? 判断远程命令成败时不被误导。
   return ok({
     data: { exitCode: r.code, stdout: r.stdout, stderr: r.stderr, truncated },
     text: body || `(无输出，退出码 ${r.code})`,
+    exitCode: r.code,
   });
 }

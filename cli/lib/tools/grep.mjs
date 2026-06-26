@@ -122,15 +122,22 @@ fi
   }
 
   if (mode === 'count') {
-    const { sliced } = applyLimit(lines);
+    // 降级路径用 grep -c，会为 0 匹配的文件也输出 "file:0"；
+    // ripgrep -c 只列出有匹配的文件，这里过滤掉 :0 行以对齐 CC 行为。
+    const nonZero = lines.filter((l) => {
+      const idx = l.lastIndexOf(':');
+      if (idx <= 0) return false;
+      const n = parseInt(l.slice(idx + 1), 10);
+      return !isNaN(n) && n > 0;
+    });
+    const { sliced } = applyLimit(nonZero);
     let total = 0;
     let fileCount = 0;
     for (const l of sliced) {
       const idx = l.lastIndexOf(':');
-      if (idx > 0) {
-        const n = parseInt(l.slice(idx + 1), 10);
-        if (!isNaN(n)) { total += n; fileCount += 1; }
-      }
+      const n = parseInt(l.slice(idx + 1), 10);
+      total += n;
+      fileCount += 1;
     }
     const text = (sliced.join('\n') || 'No matches found') +
       `\n\nFound ${total} total ${total === 1 ? 'occurrence' : 'occurrences'} across ${fileCount} ${fileCount === 1 ? 'file' : 'files'}.`;

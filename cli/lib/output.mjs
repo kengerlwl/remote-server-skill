@@ -11,14 +11,17 @@ export function isJsonMode() {
   return jsonMode;
 }
 
-/** 成功输出。data 用于 JSON 模式，text 用于人类可读模式。 */
-export function ok({ data, text }) {
+/**
+ * 成功输出。data 用于 JSON 模式，text 用于人类可读模式。
+ * exitCode 默认 0；bash 工具可透传远程命令的退出码，使调用方 $? 能反映真实结果。
+ */
+export function ok({ data, text, exitCode = 0 }) {
   if (jsonMode) {
     process.stdout.write(JSON.stringify({ ok: true, ...data }, null, 2) + '\n');
   } else if (text !== undefined) {
     process.stdout.write(text.endsWith('\n') ? text : text + '\n');
   }
-  process.exit(0);
+  process.exit(exitCode);
 }
 
 /** 失败输出并以非 0 退出。 */
